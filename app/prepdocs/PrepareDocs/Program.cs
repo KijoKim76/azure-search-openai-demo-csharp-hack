@@ -610,8 +610,14 @@ static int FindPage(IReadOnlyList<PageDetail> pageMap, int offset)
 
 internal static partial class Program
 {
+
     [GeneratedRegex("[^0-9a-zA-Z_-]")]
     private static partial Regex MatchInSetRegex();
 
-    internal static DefaultAzureCredential DefaultCredential { get; } = new();
+    //EPSO fix
+    //private static options = new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true };
+
+    internal static DefaultAzureCredential DefaultCredential { get; } = new((new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true }));
+    //internal static DefaultAzureCredential DefaultCredential { get; } = new();
+    
 }
