@@ -127,10 +127,12 @@ param webIdentityName string = ''
 param webImageName string = ''
 
 var abbrs = loadJsonContent('./abbreviations.json')
+
 //Add date value to random seed, not to make the resourcetoken duplicated with. 
-param seed string = utcNow('u')
-var resourceToken = toLower(uniqueString(subscription().id, seed, environmentName, location))
-// var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+//param seed string = utcNow('u')
+//var resourceToken = toLower(uniqueString(subscription().id, seed, environmentName, location))
+
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 
 var baseTags = { 'azd-env-name': environmentName }
 var updatedTags = union(empty(tags) ? {} : base64ToJson(tags), baseTags)
