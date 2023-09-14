@@ -3,7 +3,10 @@
 var host = new HostBuilder()
     .ConfigureServices(services =>
     {
-        var credential = new DefaultAzureCredential();
+        //EPSO fix
+         var options = new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true };
+         var credential = new DefaultAzureCredential(options);
+        //var credential = new DefaultAzureCredential();
 
         static Uri GetUriFromEnvironment(string variable) => Environment.GetEnvironmentVariable(variable) is string value &&
                 Uri.TryCreate(value, UriKind.Absolute, out Uri? uri) &&
