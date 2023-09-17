@@ -108,11 +108,6 @@ param storageAccountName string = ''
 @description('Name of the storage container. Default: content')
 param storageContainerName string = 'content'
 
-
-@description('Name of the storage container. Default: content')
-param storageContainerName4Enterprise string = 'content4enterprise'
-
-
 @description('Location of the resource group for the storage account')
 param storageResourceGroupLocation string = location
 
@@ -216,10 +211,6 @@ module keyVaultSecrets 'core/security/keyvault-secrets.bicep' = {
         name: 'AzureStorageContainer'
         value: storageContainerName
       }
-      {
-        name: 'AzureStorageContainer4Enterprise'
-        value: storageContainerName4Enterprise
-      }
     ]
   }
 }
@@ -256,7 +247,6 @@ module web './app/web.bicep' = {
     keyVaultResourceGroupName: keyVaultResourceGroup.name
     storageBlobEndpoint: storage.outputs.primaryEndpoints.blob
     storageContainerName: storageContainerName
-    storageContainerName4Enterprise: storageContainerName4Enterprise
     searchServiceEndpoint: searchService.outputs.endpoint
     searchIndexName: searchIndexName
     formRecognizerEndpoint: formRecognizer.outputs.endpoint
@@ -385,10 +375,6 @@ module storage 'core/storage/storage-account.bicep' = {
     containers: [
       {
         name: storageContainerName
-        publicAccess: 'Blob'
-      }
-      {
-        name: storageContainerName4Enterprise
         publicAccess: 'Blob'
       }
     ]
@@ -524,7 +510,6 @@ output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.n
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_BLOB_ENDPOINT string = storage.outputs.primaryEndpoints.blob
 output AZURE_STORAGE_CONTAINER string = storageContainerName
-output AZURE_STORAGE_CONTAINER4ENTERPRISE string = storageContainerName4Enterprise
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 output AZURE_TENANT_ID string = tenant().tenantId
 output SERVICE_WEB_IDENTITY_NAME string = web.outputs.SERVICE_WEB_IDENTITY_NAME

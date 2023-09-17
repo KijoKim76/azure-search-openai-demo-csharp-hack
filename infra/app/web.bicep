@@ -35,9 +35,6 @@ param storageBlobEndpoint string
 @description('The name of the storage container')
 param storageContainerName string
 
-@description('The name of the storage container for enterprise data')
-param storageContainerName4Enterprise string
-
 @description('The search service endpoint')
 param searchServiceEndpoint string
 
@@ -106,10 +103,6 @@ module app '../core/host/container-app-upsert.bicep' = {
       {
         name: 'AZURE_STORAGE_CONTAINER'
         value: storageContainerName
-      }
-      {
-        name: 'AZURE_STORAGE_CONTAINER4ENTERPRISE'
-        value: storageContainerName4Enterprise
       }
       {
         name: 'AZURE_SEARCH_SERVICE_ENDPOINT'

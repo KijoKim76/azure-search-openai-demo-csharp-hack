@@ -23,13 +23,8 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<BlobContainerClient>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
-
-            //EPSO : Replacing the container to new one for enterprise contents. 
-            var azureStorageContainer = config["AzureStorageContainer4Enterprise"];
+            var azureStorageContainer = config["AzureStorageContainer"];
             return sp.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(azureStorageContainer);
-
-            // var azureStorageContainer = config["AzureStorageContainer"];
-            // return sp.GetRequiredService<BlobServiceClient>().GetBlobContainerClient(azureStorageContainer);
         });
 
         services.AddSingleton<SearchClient>(sp =>
