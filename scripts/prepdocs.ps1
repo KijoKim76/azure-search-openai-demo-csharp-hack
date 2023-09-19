@@ -10,8 +10,9 @@ foreach ($line in $output) {
     [Environment]::SetEnvironmentVariable($name, $value)
 }
 
-Write-Host "Copy default PDFs"
-copy /Y .\data\default\*.pdf .\data\
+Write-Host "Copy default documents."
+Write-Host ""
+Copy-Item -Path .\data\default\*.pdf -Destination .\data\
 
 Write-Host "Environment variables set."
 
