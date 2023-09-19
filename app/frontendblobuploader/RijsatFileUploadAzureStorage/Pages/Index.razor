@@ -1,0 +1,281 @@
+﻿@page "/"
+@using RijsatFileUploadAzureStorage.Services;
+@using RijsatFileUploadAzureStorage.Services.Dto;
+@using Azure;
+
+@using Azure.Messaging.EventHubs;
+@using Azure.Messaging.EventHubs.Producer; 
+@using System.Text;
+
+@using Azure.Messaging.EventGrid;
+
+@inject IBlobStorageService blobStorageService
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Index</PageTitle>
+@if (warninngMessage.Length > 0)
+{
+    <div class="alert alert-warning">
+        <strong>Warning!</strong> @warninngMessage.
+    </div>
+}
+
+<h4 style="font-weight: bold;">Upload Your Documents : </h4>
+<div style="align-content:start" class="row">
+    <div style="align-content:start" class="col-sm-6">
+        <label>
+            <InputFile class="form-control" disabled="@fileLoading" OnChange="@OnInputFileChange" single />
+        </label>
+        @if (fileLoading)
+        {
+            <i class="fa fa-refresh"></i> <span>Loading...</span>
+        }
+    </div>
+    <div class="col-sm-2">
+        <button type="button" disabled="@fileLoading" class="btn btn-primary" @onclick="OnUploadSubmit">
+            Upload File
+        </button>
+    </div>
+    <div class="col-md-2 ">
+    @if (fileUploadViewModels.Count > 0)
+    {
+        <button type="button" disabled="@fileLoading" class="btn btn-primary" @onclick="OnRequestTraining">
+            Training
+        </button>
+    }
+    else
+    {
+        <button type="button" hidden class="btn btn-primary" @onclick="OnRequestTraining">
+            Training
+        </button>            
+    }
+    </div>
+</div>
+
+@if (displayMessage.Length > 0)
+{
+    <div class="alert alert-success">
+        <strong>Success!</strong> @displayMessage.
+    </div>
+}
+<br />
+
+<div style="align-content:start" class="row">
+    @if (fileUploadViewModels.Count > 0)
+    {
+        <table class="table table-responsive table-bordered">
+            <thead class="text-primary">
+                <tr>
+                    <th>File</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attachment in fileUploadViewModels)
+                {
+
+                    <tr>
+                        <td>
+                            <a class="text-primary"><i class="fa-solid fa-paperclip"></i> @attachment.FileName</a>
+                        </td>
+
+                        <td>
+                            <span class="oi oi-delete" aria-hidden="true" @onclick="() => OnFileDeleteClick(attachment)"></span>
+                            <span class="oi oi-eye" aria-hidden="true" @onclick="() => OnFileViewClick(attachment)"></span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <strong>No Files!</strong>
+        </div>
+    }
+</div>
+
+@code {
+    private string warninngMessage = "";
+    private string displayMessage = "";
+    private List<IBrowserFile> loadedFiles = new();
+    private long maxFileSize = 1024 * 15;
+    private int maxAllowedFiles = 3;
+    private bool fileLoading;
+    string Message = "No file(s) selected";
+
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    private List<FileUploadViewModel> fileUploadViewModels = new();
+
+    private string eventHubconnectString = "Endpoint=sb://contosoaitrainingevnt.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=yVWpCc232CCtLAVZpbwEfNGFllkwxMQ0Y+AEhMMTO7Q=";
+    private string eventHub = "aitrainingtrig";
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnRequestTraining()
+    {
+
+        //Event Hub Code
+        // The Event Hubs client types are safe to cache and use as a singleton for the lifetime
+        // of the application, which is best practice when events are being published or read regularly.
+        // TODO: Replace the <CONNECTION_STRING> and <HUB_NAME> placeholder values     
+        EventHubProducerClient producerClient = new EventHubProducerClient(eventHubconnectString,eventHub);
+
+        try
+        {
+            // Create a batch of events
+            using EventDataBatch eventBatch = await producerClient.CreateBatchAsync();
+            // Create a batch of events
+
+            if (!eventBatch.TryAdd(new EventData(Encoding.UTF8.GetBytes($"AItrig"))))
+            {
+                // if it is too large for the batch
+                throw new Exception($"Event is too large for the batch and cannot be sent.");
+            }
+
+            // Use the producer client to send the batch of events to the event hub
+            await producerClient.SendAsync(eventBatch);
+            //Console.WriteLine($"AITrig event has been published.");
+        }
+        catch (Exception ex)
+        {
+            warninngMessage = ex.ToString();
+        }
+        finally
+        {
+
+            displayMessage = "Training Request Completed. Please ask in a few minutes!!";
+            await producerClient.DisposeAsync();
+        }
+
+        this.StateHasChanged();
+
+        /*
+        string topicEndpoint = "https://contosoaitrainingtopic.eastus-1.eventgrid.azure.net/api/events";
+        string topicAccessKey = "rlZ9RfrrYdJNKs5kBJpI0xKJ2/5dia7uvwblPtpRE3o=";
+
+        //With Access Key
+
+        //var client = new EventGridPublisherClient(new Uri(topicEndpoint), new AzureKeyCredential(topicAccessKey)); 
+        
+        //With SAS Tocken
+        var builder = new EventGridSasBuilder(new Uri(topicEndpoint), DateTimeOffset.Now.AddHours(1));
+        var keyCredential = new AzureKeyCredential(topicAccessKey);
+        string sasToken = builder.GenerateSas(keyCredential);
+        var sasCredential = new AzureSasCredential(sasToken);
+
+        try
+        {
+            EventGridPublisherClient client = new EventGridPublisherClient(
+                new Uri(topicEndpoint),
+                sasCredential);
+
+            string trigerEvent = "reqTraining";
+
+            // EventGridEvent with custom model serialized to JSON
+            EventGridEvent egEvent = new EventGridEvent(
+                                    "ContosoAiEvent",
+                                    "ContosoAiEvent.reqTraining",
+                                    "1.0",
+                                    trigerEvent);
+
+            // Send the events
+            await client.SendEventAsync(egEvent);
+   
+        }
+        catch (Exception ex)
+        {
+            warninngMessage = "Tpic Event Publish failed, Please try again!!";
+        }
+        */
+
+    }
+
+    private async void OnUploadSubmit()
+    {
+        fileLoading = true;
+
+        if (selectedFiles == null)
+        {
+            warninngMessage = "File Upload first, Please try again!!";
+        }
+        else
+        {
+
+            foreach (var file in selectedFiles)
+            {
+                try
+                {
+                    var trustedFileNameForFileStorage = file.Name;
+                    var blobUrl = await blobStorageService.UploadFileToBlobAsync(trustedFileNameForFileStorage, file.ContentType, file.OpenReadStream(20971520));
+                    if (blobUrl != null)
+                    {
+                        FileUploadViewModel fileUploadViewModel = new FileUploadViewModel()
+                            {
+                                FileName = trustedFileNameForFileStorage,
+                                FileStorageUrl = blobUrl,
+                                ContentType = file.ContentType,
+                            };
+
+                        fileUploadViewModels.Add(fileUploadViewModel);
+                        displayMessage = trustedFileNameForFileStorage + " Uploaded!!";
+                    }
+                    else
+                        warninngMessage = "File Upload failed, Please try again!!";
+
+                }
+                catch (Exception ex)
+                {
+                    warninngMessage = "File Upload failed, Please try again!!";
+                }
+            }
+        }
+
+        fileLoading = false;
+        this.StateHasChanged();
+    }
+
+    private async void OnFileDeleteClick(FileUploadViewModel attachment)
+    {
+        try
+        {
+            var deleteResponse = await blobStorageService.DeleteFileToBlobAsync(attachment.FileName);
+            if (deleteResponse)
+            {
+                fileUploadViewModels.Remove(attachment);
+                displayMessage = attachment.FileName + " Deleted!!";
+            }
+
+        }
+        catch (Exception)
+        {
+            warninngMessage = "Something went wrong! Please try again.";
+        }
+        this.StateHasChanged();
+    }
+    private async void OnFileViewClick(FileUploadViewModel attachment)
+    {
+        try
+        {
+            var sasToken = await blobStorageService.GetBlobSASTOkenByFile(attachment.FileName);
+            if (sasToken != null)
+            {
+                string fileUrl = attachment.FileStorageUrl + "?" + sasToken;
+                await jsRuntime.InvokeAsync<object>("open", fileUrl, "_blank");
+            }
+
+        }
+        catch (Exception)
+        {
+            warninngMessage = "Something went wrong! Please try again.";
+        }
+        this.StateHasChanged();
+    }
+
+}

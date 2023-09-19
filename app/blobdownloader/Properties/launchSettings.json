@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "storage-blobs-dotnet-quickstart": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Hack"
+    }
+  }
+}
