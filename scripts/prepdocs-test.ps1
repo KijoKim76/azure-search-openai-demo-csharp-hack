@@ -20,10 +20,11 @@ while ($true){
     Write-Host ""
 
     Remove-Item -Path .\data\*.pdf 
+    Remove-Item -Path .\data\partner\*.pdf 
     Write-Host "-----------------------------------------------------------"
     Write-Host "Wait the training request and download uploaded documents from Blob storage."
     Write-Host "Waiting..... "
-    .\scripts\storage-blobs-dotnet-quickstart.exe .\data\
+    .\scripts\storage-blobs-dotnet-quickstart.exe .\data\partner\
     
     Write-Host "Started....."
     Write-Host "Download completed.."
@@ -42,14 +43,13 @@ while ($true){
         --tenantid $env:AZURE_TENANT_ID `
         --verbose
 
-
-
-        
-    azd env set AZD_PREPDOCS_RAN "true"
+       
+    azd env set AZD_PREPDOCS_RAN "false"
 
     Write-Host "Copy default documents."
     Write-Host ""
     Copy-Item -Path .\data\default\*.pdf -Destination .\data\
+    Copy-Item -Path .\data\partner\*.pdf -Destination .\data\
 
     Write-Host ""
     Write-Host ""
