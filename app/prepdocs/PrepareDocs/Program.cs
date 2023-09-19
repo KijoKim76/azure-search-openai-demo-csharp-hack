@@ -131,9 +131,15 @@ static async ValueTask RemoveFromIndexAsync(
             new SearchOptions
             {
                 Filter = filter,
-                Size = 1_000,
+                Size = 1_000, //original 1_000
                 IncludeTotalCount = true
             });
+
+        if(response == null)
+        {
+            Console.WriteLine($"Searching documnet returned null...");
+            break; 
+        }
 
         var documentsToDelete = new List<SearchDocument>();
         await foreach (var result in response.Value.GetResultsAsync())
@@ -144,18 +150,28 @@ static async ValueTask RemoveFromIndexAsync(
             });
         }
 
-        Response<IndexDocumentsResult> deleteResponse =
-            await searchClient.DeleteDocumentsAsync(documentsToDelete);
 
-        if (options.Verbose)
+        Console.WriteLine($"Documents indexs are on deleting..");
+
+        if(documentsToDelete.Count != 0)
         {
-            Console.WriteLine($"""
-                    Removed {deleteResponse.Value.Results.Count} sections from index
-                """);
-        }
+            Response<IndexDocumentsResult> deleteResponse =
+                await searchClient.DeleteDocumentsAsync(documentsToDelete);
+
+            if (options.Verbose)
+            {
+                Console.WriteLine($"""
+                        Removed {deleteResponse.Value.Results.Count} sections from index
+                    """);
+            }
+        }       
+        else{
+            Console.WriteLine($"No more documents indexs to delete..");
+            break; 
+        } 
 
         // It can take a few seconds for search results to reflect changes, so wait a bit
-        await Task.Delay(TimeSpan.FromMilliseconds(2_000));
+        await Task.Delay(TimeSpan.FromMilliseconds(500)); //original was 2_000
     }
 }
 

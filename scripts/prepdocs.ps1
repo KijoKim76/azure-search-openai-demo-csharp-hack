@@ -10,6 +10,9 @@ foreach ($line in $output) {
     [Environment]::SetEnvironmentVariable($name, $value)
 }
 
+Write-Host "Copy default PDFs"
+copy /Y .\data\default\*.pdf .\data\
+
 Write-Host "Environment variables set."
 
 if ([string]::IsNullOrEmpty($env:AZD_PREPDOCS_RAN) -or $env:AZD_PREPDOCS_RAN -eq "false") {
