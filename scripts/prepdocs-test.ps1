@@ -16,6 +16,19 @@ Write-Host ""
 
 while ($true){
 
+    Write-Host "Cleaning up existing data..... "
+    Write-Host ""
+
+    Remove-Item -Path .\data\*.pdf 
+    Write-Host "-----------------------------------------------------------"
+    Write-Host "Wait the training request and download uploaded documents from Blob storage."
+    Write-Host "Waiting..... "
+    .\scripts\storage-blobs-dotnet-quickstart.exe .\data\
+    
+    Write-Host "Started....."
+    Write-Host "Download completed.."
+    Write-Host ""
+
     Get-Location | Select-Object -ExpandProperty Path
     dotnet run --project "app/prepdocs/PrepareDocs/PrepareDocs.csproj" -- `
         './data/*.pdf' `
@@ -30,14 +43,9 @@ while ($true){
         --verbose
 
 
-    azd env set AZD_PREPDOCS_RAN "false"
-    Write-Host "Cleaning up existing data..... "
-    Write-Host ""
 
-    Write-Host "Remove downloaded documents."
-    Write-Host ""
-
-    Remove-Item -Path .\data\*.pdf 
+        
+    azd env set AZD_PREPDOCS_RAN "true"
 
     Write-Host "Copy default documents."
     Write-Host ""
@@ -45,12 +53,6 @@ while ($true){
 
     Write-Host ""
     Write-Host ""
-    Write-Host "-----------------------------------------------------------"
-    Write-Host "Wait the training request and download uploaded documents from Blob storage."
-    Write-Host "Waiting..... "
-    .\scripts\storage-blobs-dotnet-quickstart.exe .\data\
-
-    Write-Host "Download completed.."
 
     if ([string]::IsNullOrEmpty($env:AZD_PREPDOCS_RAN) -or $env:AZD_PREPDOCS_RAN -eq "false") {
         Write-Host 'Running "PrepareDocs.dll"'
