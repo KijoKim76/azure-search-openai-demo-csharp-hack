@@ -39,7 +39,7 @@
     <div class="col-md-2 ">
     @if (fileUploadViewModels.Count > 0)
     {
-        <button type="button" disabled="@fileLoading" class="btn btn-primary" @onclick="OnRequestTraining">
+            <button type="button" disabled="@fileLoading" class="btn btn-primary" @onclick="OnRequestTraining">
             Training
         </button>
     }
@@ -150,7 +150,7 @@
         finally
         {
 
-            displayMessage = "Training Request Completed. Please ask in a few minutes!!";
+            displayMessage = "Training Request Completed. Please ask in 5 minutes!!";
             await producerClient.DisposeAsync();
         }
 
